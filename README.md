@@ -197,6 +197,6 @@ More in [`docs/screenshots`](docs/screenshots) and in the [project report](docs/
 
 | Name | Roll no. |
 |---|---|
-| Yashasvi Gupta | |
-| | |
-| | |
+| Yashasvi Gupta | 16010123341 |
+| Shubhpreet Kaur | 16010123328 |
+| Aditi Agarwal | 16010123018 |

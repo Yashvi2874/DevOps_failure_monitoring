@@ -2,10 +2,10 @@
 title: "Automated CI/CD and Real-Time Failure Monitoring of a Containerized Environmental Sensor Dashboard Using Jenkins, Docker, Prometheus and Alertmanager"
 subtitle: "DevOps Lab CA – Mini Project Report"
 author:
-  - "Yashasvi Gupta (Roll no. ______)"
-  - "______________ (Roll no. ______)"
-  - "______________ (Roll no. ______)"
-date: "Batch ______ · Guide: ______________ · October 2026"
+  - "Yashasvi Gupta (16010123341)"
+  - "Shubhpreet Kaur (16010123328)"
+  - "Aditi Agarwal (16010123018)"
+date: "October 2026"
 ---
 
 # 1. Abstract
