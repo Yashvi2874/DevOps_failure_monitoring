@@ -58,7 +58,7 @@ def test_readings_api_returns_three_sensors(client):
     res = client.get("/api/readings")
     assert res.status_code == 200
     sensors = res.get_json()["sensors"]
-    assert len(sensors) == 3
+    assert len(sensors) == 4  # deliberately wrong: there are 3 sensors
     for s in sensors:
         assert set(s["values"]) == {"temperature", "humidity", "co2", "pm25"}
 
