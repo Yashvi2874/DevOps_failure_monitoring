@@ -127,8 +127,13 @@ pipeline {
             }
             post {
                 success {
-                    // Remember this build as the last known good one.
-                    sh 'docker tag ${APP_IMAGE}:${IMAGE_TAG} ${APP_IMAGE}:stable'
+                    // Remember this build as the last known good one. :latest is
+                    // what a plain `docker compose up -d` starts, so it should be
+                    // the newest build that passed, not whatever was built locally.
+                    sh '''
+                        docker tag ${APP_IMAGE}:${IMAGE_TAG} ${APP_IMAGE}:stable
+                        docker tag ${APP_IMAGE}:${IMAGE_TAG} ${APP_IMAGE}:latest
+                    '''
                 }
                 failure {
                     sh 'sh scripts/rollback.sh'
