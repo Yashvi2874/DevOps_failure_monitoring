@@ -1,0 +1,134 @@
+# Unit tests for the alert rules, run with:
+#   promtool test rules /etc/prometheus/tests/alert_rules_test.yml
+# Each test feeds Prometheus fake time series and checks which alerts are
+# firing at a given moment. The pipeline runs these before every deployment.
+rule_files:
+  - ../alert_rules.yml
+
+evaluation_interval: 5s
+
+tests:
+  - name: dashboard down for more than 30 seconds fires a critical alert
+    interval: 5s
+    input_series:
+      - series: 'up{job="sensor-dashboard", instance="dashboard:8000"}'
+        values: "1 1 0x12"          # up for 10s, then down
+    alert_rule_test:
+      - eval_time: 30s              # down for 20s: still only pending
+        alertname: SensorDashboardDown
+        exp_alerts: []
+      - eval_time: 45s
+        alertname: SensorDashboardDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              job: sensor-dashboard
+              instance: dashboard:8000
+            exp_annotations:
+              summary: Sensor dashboard is unreachable
+              description: Prometheus could not scrape dashboard:8000 for more than 30 seconds.
+
+  - name: a short blip does not page anyone
+    interval: 5s
+    input_series:
+      - series: 'up{job="sensor-dashboard", instance="dashboard:8000"}'
+        values: "1 1 0 0 1x10"      # down for only 10s
+    alert_rule_test:
+      - eval_time: 50s
+        alertname: SensorDashboardDown
+        exp_alerts: []
+
+  - name: overheating sensor
+    interval: 5s
+    input_series:
+      - series: 'sensor_temperature_celsius{sensor="sensor-1", location="Lab", job="sensor-dashboard"}'
+        values: "30 33 36 38 40 41 42 43 44 44"
+      - series: 'sensor_temperature_celsius{sensor="sensor-2", location="Server room", job="sensor-dashboard"}'
+        values: "26x10"
+    alert_rule_test:
+      - eval_time: 20s              # above 35 for only 10s
+        alertname: SensorOverheat
+        exp_alerts: []
+      - eval_time: 35s
+        alertname: SensorOverheat
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              sensor: sensor-1
+              location: Lab
+              job: sensor-dashboard
+            exp_annotations:
+              summary: Lab is overheating (43.0 °C)
+              description: sensor-1 has reported more than 35 °C for at least 15 seconds.
+
+  - name: sensor that stops reporting
+    interval: 5s
+    input_series:
+      # last_seen keeps up with the clock for 20s, then freezes
+      - series: 'sensor_last_seen_timestamp_seconds{sensor="sensor-1", location="Lab", job="sensor-dashboard"}'
+        values: "0 5 10 15 20 20 20 20 20 20 20 20 20 20"
+    alert_rule_test:
+      - eval_time: 40s              # quiet for 20s, alert still pending
+        alertname: SensorOffline
+        exp_alerts: []
+      - eval_time: 60s
+        alertname: SensorOffline
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              sensor: sensor-1
+              location: Lab
+              job: sensor-dashboard
+            exp_annotations:
+              summary: sensor-1 (Lab) stopped reporting
+              description: No reading received for 40s.
+
+  - name: pollution raises both air-quality alerts
+    interval: 5s
+    input_series:
+      - series: 'sensor_co2_ppm{sensor="sensor-3", location="Outdoors", job="sensor-dashboard"}'
+        values: "420 900 1600 1900 2100x8"
+      - series: 'sensor_pm25_ugm3{sensor="sensor-3", location="Outdoors", job="sensor-dashboard"}'
+        values: "48 90 120 150 170x8"
+    alert_rule_test:
+      - eval_time: 50s
+        alertname: HighCO2Level
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              sensor: sensor-3
+              location: Outdoors
+              job: sensor-dashboard
+            exp_annotations:
+              summary: CO2 is high in Outdoors (2100 ppm)
+              description: sensor-3 has reported more than 1500 ppm of CO2 for 20 seconds.
+      - eval_time: 50s
+        alertname: HighPM25Level
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              sensor: sensor-3
+              location: Outdoors
+              job: sensor-dashboard
+            exp_annotations:
+              summary: PM2.5 is high in Outdoors (170 µg/m³)
+              description: sensor-3 has reported more than 100 µg/m³ of PM2.5 for 20 seconds.
+
+  - name: API returning errors
+    interval: 5s
+    input_series:
+      # 2 requests/second in total, half of them failing
+      - series: 'dashboard_http_requests_total{job="sensor-dashboard", endpoint="/api/readings", method="GET", status="200"}'
+        values: "0+5x30"
+      - series: 'dashboard_http_requests_total{job="sensor-dashboard", endpoint="/api/readings", method="GET", status="500"}'
+        values: "0+5x30"
+    alert_rule_test:
+      - eval_time: 120s
+        alertname: HighApiErrorRate
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              job: sensor-dashboard
+            exp_annotations:
+              summary: More than 20% of API requests are failing
+              description: 50% of API requests returned a 5xx error over the last minute.
