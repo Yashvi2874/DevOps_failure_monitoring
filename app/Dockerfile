@@ -7,7 +7,7 @@ FROM python:3.12-slim AS base
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1     PIP_ROOT_USER_ACTION=ignore
 WORKDIR /app
 # Copy only the requirements first so this layer stays cached until the
 # dependencies change, not every time the code changes.

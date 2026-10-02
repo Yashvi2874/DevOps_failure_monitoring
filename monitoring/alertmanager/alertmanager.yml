@@ -7,8 +7,9 @@ global:
 route:
   receiver: team-chat
   # One notification per sensor: if Sensor 3 has both high CO2 and high PM2.5
-  # you get a single message listing both, not two separate pings.
-  group_by: ["sensor"]
+  # you get a single message listing both, not two separate pings. Grouping by
+  # job as well keeps Jenkins alerts apart from the dashboard's own alerts.
+  group_by: ["job", "sensor"]
   group_wait: 5s         # wait a little so related alerts arrive together
   group_interval: 30s    # how soon to send an update for an existing group
   repeat_interval: 2h    # re-send if something is still broken after this
