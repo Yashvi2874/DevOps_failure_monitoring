@@ -1,0 +1,76 @@
+# Each rule is a PromQL query. When it returns something for longer than
+# `for`, the alert fires and Prometheus hands it to Alertmanager.
+groups:
+  - name: availability
+    rules:
+      - alert: SensorDashboardDown
+        expr: up{job="sensor-dashboard"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Sensor dashboard is unreachable"
+          description: "Prometheus could not scrape {{ $labels.instance }} for more than 30 seconds."
+
+      - alert: SensorDashboardRestarted
+        # process_start_time_seconds changes whenever the app process starts
+        # again: after a crash, or after Jenkins deploys a new build.
+        expr: changes(process_start_time_seconds{job="sensor-dashboard"}[5m]) > 0
+        labels:
+          severity: info
+        annotations:
+          summary: "Sensor dashboard restarted (crash or new deployment)"
+          description: "The app process on {{ $labels.instance }} started again in the last 5 minutes."
+
+      - alert: HighApiErrorRate
+        expr: |
+          sum by (job) (rate(dashboard_http_requests_total{job="sensor-dashboard", endpoint=~"/api/.*", status=~"5.."}[1m]))
+            /
+          sum by (job) (rate(dashboard_http_requests_total{job="sensor-dashboard", endpoint=~"/api/.*"}[1m]))
+            > 0.2
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "More than 20% of API requests are failing"
+          description: "{{ $value | humanizePercentage }} of API requests returned a 5xx error over the last minute."
+
+  - name: sensor-readings
+    rules:
+      - alert: SensorOverheat
+        expr: sensor_temperature_celsius > 35
+        for: 15s
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.location }} is overheating ({{ $value | printf \"%.1f\" }} °C)"
+          description: "{{ $labels.sensor }} has reported more than 35 °C for at least 15 seconds."
+
+      - alert: SensorOffline
+        # The app keeps exposing the last timestamp it got from each sensor.
+        # If that timestamp stops moving, the sensor has gone quiet.
+        expr: time() - sensor_last_seen_timestamp_seconds > 10
+        for: 10s
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.sensor }} ({{ $labels.location }}) stopped reporting"
+          description: "No reading received for {{ $value | humanizeDuration }}."
+
+      - alert: HighCO2Level
+        expr: sensor_co2_ppm > 1500
+        for: 20s
+        labels:
+          severity: warning
+        annotations:
+          summary: "CO2 is high in {{ $labels.location }} ({{ $value | printf \"%.0f\" }} ppm)"
+          description: "{{ $labels.sensor }} has reported more than 1500 ppm of CO2 for 20 seconds."
+
+      - alert: HighPM25Level
+        expr: sensor_pm25_ugm3 > 100
+        for: 20s
+        labels:
+          severity: warning
+        annotations:
+          summary: "PM2.5 is high in {{ $labels.location }} ({{ $value | printf \"%.0f\" }} µg/m³)"
+          description: "{{ $labels.sensor }} has reported more than 100 µg/m³ of PM2.5 for 20 seconds."
