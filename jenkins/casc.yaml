@@ -1,0 +1,56 @@
+# Jenkins Configuration as Code. Read on every startup, so the Jenkins setup
+# lives in Git like everything else. ${VARS} come from jenkins/.env.
+jenkins:
+  systemMessage: "Sensor Dashboard CI/CD. This Jenkins is set up from jenkins/casc.yaml."
+  numExecutors: 2
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "${JENKINS_ADMIN_ID:-admin}"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+unclassified:
+  location:
+    url: "${JENKINS_URL:-http://localhost:8080/}"
+
+# The pipeline job, created with the Job DSL plugin. It reads the Jenkinsfile
+# from the repository and polls GitHub every minute for new commits.
+jobs:
+  - script: |
+      pipelineJob('sensor-dashboard-pipeline') {
+        displayName('Sensor Dashboard CI/CD')
+        description('Tests, builds and deploys the environmental sensor dashboard and its monitoring stack.')
+        logRotator {
+          numToKeep(30)
+        }
+        parameters {
+          booleanParam('SIMULATE_BAD_DEPLOY', false, 'Deploy this build with a failing /health check to demonstrate the automatic rollback.')
+        }
+        properties {
+          pipelineTriggers {
+            triggers {
+              pollSCM {
+                scmpoll_spec('* * * * *')
+              }
+            }
+          }
+        }
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('${PIPELINE_REPO_URL:-https://github.com/Yashvi2874/DevOps_failure_monitoring.git}')
+                }
+                branch('*/main')
+              }
+            }
+            scriptPath('Jenkinsfile')
+            lightweight(true)
+          }
+        }
+      }
