@@ -103,7 +103,8 @@ Jenkins talks to the host's Docker engine through the mounted
 | Deploy | `docker compose up -d` with `IMAGE_TAG=<build number>`; only changed containers are replaced | Pipeline stops |
 | Smoke Test | From a container on the same network: `/health` is OK and reports the expected build, the API returns 3 sensors, `/metrics` works, Prometheus sees the new target | `scripts/rollback.sh` redeploys `sensor-dashboard:stable` (the last build that passed) and checks it |
 
-After a successful smoke test the image is tagged `:stable`. Whatever the
+After a successful smoke test the image is tagged `:stable` (used for rollbacks) and
+`:latest` (what a plain `docker compose up -d` starts). Whatever the
 outcome, the pipeline reports to Alertmanager: a failed build raises a
 `PipelineFailed` alert and the next green build resolves it.
 
