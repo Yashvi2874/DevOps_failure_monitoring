@@ -11,8 +11,11 @@ AM="${ALERTMANAGER_URL:-http://host.docker.internal:9093}"
 NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 if [ "$STATE" = "firing" ]; then
     ENDS=$(date -u -d '+30 minutes' +%Y-%m-%dT%H:%M:%SZ)
+    SUMMARY="Jenkins build #${BUILD_NUMBER:-?} failed"
 else
+    # Same labels as the failure alert, so Alertmanager marks that one resolved.
     ENDS="$NOW"
+    SUMMARY="Pipeline is green again (build #${BUILD_NUMBER:-?} passed)"
 fi
 
 # Escape backslashes and quotes so a commit message can't break the JSON.
@@ -27,8 +30,8 @@ cat > alert.json <<EOF
     "pipeline": "${JOB_NAME:-sensor-dashboard-pipeline}"
   },
   "annotations": {
-    "summary": "Jenkins build #${BUILD_NUMBER:-?} failed: nothing was deployed from it",
-    "description": "Commit ${GIT_SHORT:-?}: ${SUBJECT}. Console: ${BUILD_URL:-}console"
+    "summary": "${SUMMARY}",
+    "description": "Commit ${GIT_SHORT:-?}: ${SUBJECT}. If it failed after Deploy, the previous build was restored automatically. Console: ${BUILD_URL:-}console"
   },
   "startsAt": "${NOW}",
   "endsAt": "${ENDS}",
