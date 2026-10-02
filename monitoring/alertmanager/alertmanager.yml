@@ -1,0 +1,46 @@
+# Alertmanager decides who hears about an alert, when, and how often.
+global:
+  # Alerts pushed straight to the API (the Jenkins pipeline does this) are
+  # considered resolved if nobody refreshes them for 5 minutes.
+  resolve_timeout: 5m
+
+route:
+  receiver: team-chat
+  # One notification per sensor: if Sensor 3 has both high CO2 and high PM2.5
+  # you get a single message listing both, not two separate pings.
+  group_by: ["sensor"]
+  group_wait: 5s         # wait a little so related alerts arrive together
+  group_interval: 30s    # how soon to send an update for an existing group
+  repeat_interval: 2h    # re-send if something is still broken after this
+  routes:
+    # Critical problems (the app is down, the API is failing) go to the
+    # on-call channel and are sent faster.
+    - matchers: ['severity="critical"']
+      receiver: on-call-pager
+      group_wait: 5s
+      repeat_interval: 30m
+
+receivers:
+  # Both receivers post to our small alert-receiver service. In a real team
+  # these would be Slack, email or PagerDuty; the routing logic stays the same.
+  - name: team-chat
+    webhook_configs:
+      - url: http://alert-receiver:5001/hooks/team-chat
+        send_resolved: true
+
+  - name: on-call-pager
+    webhook_configs:
+      - url: http://alert-receiver:5001/hooks/on-call-pager
+        send_resolved: true
+
+inhibit_rules:
+  # If the whole app is down, don't also report every symptom of it.
+  - source_matchers: ['alertname="SensorDashboardDown"']
+    target_matchers: ['severity=~"warning|info"']
+    equal: ["job"]
+
+  # An offline sensor's last temperature is stale, so don't report it as
+  # overheating at the same time.
+  - source_matchers: ['alertname="SensorOffline"']
+    target_matchers: ['alertname="SensorOverheat"']
+    equal: ["sensor"]
