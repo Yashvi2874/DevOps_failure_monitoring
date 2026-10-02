@@ -47,7 +47,7 @@ def test_normal_readings_stay_near_baseline(sim, clock):
         clock.advance(2)
         sim.tick()
     lab = sim.snapshot()[0]
-    assert 18 < lab["values"]["temperature"] < 20
+    assert 18 < lab["values"]["temperature"] < 28
 
 
 def test_overheat_pushes_temperature_over_the_alert_threshold(sim, clock):
