@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Test reports produced by the pipeline
+reports/
+
+# Local secrets
+.env
+!.env.example
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
