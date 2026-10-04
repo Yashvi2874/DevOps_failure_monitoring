@@ -199,4 +199,4 @@ More in [`docs/screenshots`](docs/screenshots) and in the [project report](docs/
 |---|---|
 | Yashasvi Gupta | 16010123341 |
 | Shubhpreet Kaur | 16010123328 |
-| Aditi Agarwal | 16010123018 |
+| Aditi Agrawal | 16010123018 |

@@ -4,7 +4,7 @@ subtitle: "DevOps Lab CA – Mini Project Report"
 author:
   - "Yashasvi Gupta (16010123341)"
   - "Shubhpreet Kaur (16010123328)"
-  - "Aditi Agarwal (16010123018)"
+  - "Aditi Agrawal (16010123018)"
 date: "October 2026"
 ---
 
