@@ -1,5 +1,3 @@
-// Polls the dashboard API and redraws the page. No framework, no build step.
-
 const TEMP_LIMIT = 35;      // same threshold as the SensorOverheat alert
 const CO2_LIMIT = 1500;
 const PM25_LIMIT = 100;
@@ -182,7 +180,7 @@ async function syncApiErrorButton() {
     const data = await (await fetch("/api/simulation", { cache: "no-store" })).json();
     btn.classList.toggle("on", data.api_errors);
   } catch (err) {
-    // not important enough to show
+    // the next page load will sync it
   }
 }
 

@@ -1,9 +1,5 @@
-"""Prometheus metrics exposed on /metrics.
-
-Every app instance gets its own registry. That keeps the unit tests independent
-of each other (no "duplicated timeseries" errors) and makes it obvious which
-metrics belong to this service.
-"""
+"""Metrics exposed on /metrics. Each app instance gets its own registry so
+tests don't trip over duplicated time series."""
 
 from prometheus_client import (
     CollectorRegistry,
@@ -20,8 +16,7 @@ SENSOR_LABELS = ["sensor", "location"]
 class DashboardMetrics:
     def __init__(self, registry=None):
         self.registry = registry or CollectorRegistry()
-        # process_start_time_seconds comes from here; the AppRestarted alert
-        # uses it to notice crashes and redeploys.
+        # process_start_time_seconds, used by the SensorDashboardRestarted alert
         ProcessCollector(registry=self.registry)
         PlatformCollector(registry=self.registry)
 
@@ -63,7 +58,6 @@ class DashboardMetrics:
         self.build_info.labels(version=version, commit=commit, build=build).set(1)
 
     def update(self, sensors):
-        """Copy a simulator snapshot into the gauges."""
         for s in sensors:
             labels = {"sensor": s["id"], "location": s["location"]}
             values = s["values"]
@@ -74,9 +68,8 @@ class DashboardMetrics:
             self.last_seen.labels(**labels).set(s["last_seen"])
             self.sensor_up.labels(**labels).set(1 if s["online"] else 0)
 
-            # The simulator keeps a running total; a Counter only goes up, so
-            # add whatever is new since the last update. Calling labels() even
-            # when nothing changed makes the series show up as 0 from the start.
+            # the simulator keeps a running total, so only add what's new;
+            # calling labels() first makes the series start at 0
             errors = self.read_errors.labels(**labels)
             new_errors = s["read_errors"] - self._reported_errors.get(s["id"], 0)
             if new_errors > 0:

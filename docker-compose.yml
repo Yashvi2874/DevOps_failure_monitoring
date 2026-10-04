@@ -1,9 +1,3 @@
-# The whole running system: the app plus everything that watches it.
-#
-#   docker compose up -d --build     start (or update) everything
-#   docker compose ps                see what is running
-#   docker compose down              stop and remove the containers
-#
 # Jenkins deploys with this same file, passing IMAGE_TAG=<build number>.
 name: sensor-monitoring
 
@@ -18,7 +12,6 @@ services:
     environment:
       ALERTMANAGER_URL: http://alertmanager:9093
       ENABLE_SIMULATION: "true"
-      # Only ever true when Jenkins is asked to simulate a broken release.
       FORCE_UNHEALTHY: ${FORCE_UNHEALTHY:-false}
     ports:
       - "8000:8000"
@@ -59,8 +52,7 @@ services:
 
 networks:
   default:
-    # A fixed name so the Jenkins smoke test can join this network.
-    name: sensor-net
+    name: sensor-net  # fixed name so the smoke test can join it
 
 volumes:
   prometheus-data:

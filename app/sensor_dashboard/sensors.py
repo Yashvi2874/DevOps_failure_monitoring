@@ -1,18 +1,12 @@
-"""Simulated environmental sensors.
-
-Each sensor does a mean-reverting random walk around its own baseline, so the
-numbers move like real readings instead of jumping around. Failure scenarios
-(overheat, offline, pollution) can be switched on per sensor so that the
-monitoring stack has something real to detect during a demo.
-"""
+"""Simulated sensors: each value random-walks around its baseline, and
+overheat/offline/pollution scenarios can be switched on per sensor."""
 
 import random
 import threading
 import time
 from dataclasses import dataclass, field
 
-# Physical limits, used to clamp values so a long random walk never produces
-# something silly like negative humidity.
+# clamp so a long random walk can't produce e.g. negative humidity
 LIMITS = {
     "temperature": (-10.0, 60.0),
     "humidity": (5.0, 100.0),
@@ -20,10 +14,8 @@ LIMITS = {
     "pm25": (0.0, 500.0),
 }
 
-# How much each value wobbles per tick.
 NOISE = {"temperature": 0.25, "humidity": 0.8, "co2": 12.0, "pm25": 1.5}
 
-# Where a value drifts towards while a failure scenario is active.
 OVERHEAT_TARGET = 45.0
 POLLUTION_TARGETS = {"co2": 2200.0, "pm25": 180.0}
 
@@ -81,8 +73,6 @@ def default_sensors():
 
 
 class SensorSimulator:
-    """Owns the sensors and moves their readings forward one tick at a time."""
-
     HISTORY_LENGTH = 60
 
     def __init__(self, sensors=None, seed=None, clock=time.time):
@@ -96,7 +86,6 @@ class SensorSimulator:
             sensor.last_seen = now
 
     def tick(self):
-        """Take one reading from every sensor that is online."""
         now = self._clock()
         with self._lock:
             for sensor in self.sensors.values():
@@ -105,8 +94,7 @@ class SensorSimulator:
                     continue
                 for metric, value in sensor.values.items():
                     target = sensor.target(metric)
-                    # Drift faster towards a failure target so alerts show up
-                    # within a few seconds instead of minutes.
+                    # move faster towards a failure target so alerts show up quickly
                     pull = 0.25 if target != sensor.baseline[metric] else 0.1
                     value += (target - value) * pull
                     value += self._rng.gauss(0, NOISE[metric])
@@ -120,7 +108,7 @@ class SensorSimulator:
         if scenario not in SCENARIOS:
             raise ValueError(f"unknown scenario: {scenario}")
         with self._lock:
-            sensor = self.sensors[sensor_id]  # KeyError for unknown sensors
+            sensor = self.sensors[sensor_id]
             if active:
                 sensor.scenarios.add(scenario)
             else:
@@ -138,8 +126,6 @@ class SensorSimulator:
 
 
 class SamplerThread(threading.Thread):
-    """Background thread that ticks the simulator and refreshes the metrics."""
-
     def __init__(self, simulator, on_tick, interval=2.0):
         super().__init__(name="sensor-sampler", daemon=True)
         self.simulator = simulator

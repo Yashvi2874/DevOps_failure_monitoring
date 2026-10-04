@@ -1,14 +1,6 @@
-"""A tiny stand-in for Slack/email: Alertmanager posts notifications here.
-
-POST /hooks/<channel>   Alertmanager webhook (one URL per receiver/channel)
-GET  /                  page listing the notifications, newest first
-GET  /api/notifications the same data as JSON
-GET  /health            liveness check
-
-Only the standard library is used, so the image stays tiny. If
-FORWARD_WEBHOOK_URL is set (a Slack incoming webhook, or a Discord webhook
-URL ending in /slack), each notification is also forwarded there.
-"""
+"""Stand-in for Slack/email: Alertmanager posts notifications to
+/hooks/<channel> and the page at / lists them. Set FORWARD_WEBHOOK_URL to a
+Slack (or Discord .../slack) webhook to forward them as well."""
 
 import html
 import json
@@ -32,7 +24,6 @@ def now_iso():
 
 
 def parse_notification(channel, payload, received_at=None):
-    """Turn Alertmanager's webhook body into a compact record."""
     alerts = []
     for alert in payload.get("alerts", []):
         labels = alert.get("labels", {})
@@ -58,7 +49,6 @@ def parse_notification(channel, payload, received_at=None):
 
 
 def format_text(record):
-    """One line per alert, used for the container log and for forwarding."""
     lines = []
     for a in record["alerts"]:
         where = f" [{a['sensor']}]" if a["sensor"] else ""
@@ -175,8 +165,7 @@ class Handler(BaseHTTPRequestHandler):
         self._send(200, '{"status": "received"}', "application/json")
 
     def log_message(self, fmt, *args):
-        # The default access log is noisy (Docker's health check hits us every
-        # few seconds); the notifications themselves are printed in do_POST.
+        # silence the access log; health checks would flood it
         pass
 
 

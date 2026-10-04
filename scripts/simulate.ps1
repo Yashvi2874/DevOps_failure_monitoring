@@ -1,16 +1,6 @@
-<#
-  Break (and fix) things during a demo, from PowerShell.
-
-    .\scripts\simulate.ps1 overheat  -Sensor sensor-1
-    .\scripts\simulate.ps1 offline   -Sensor sensor-2
-    .\scripts\simulate.ps1 pollution -Sensor sensor-3
-    .\scripts\simulate.ps1 api-errors
-    .\scripts\simulate.ps1 crash
-    .\scripts\simulate.ps1 down        # stops the container
-    .\scripts\simulate.ps1 up          # starts it again
-    .\scripts\simulate.ps1 reset       # clears every simulated fault
-    .\scripts\simulate.ps1 status
-#>
+# .\scripts\simulate.ps1 overheat -Sensor sensor-1
+# Scenarios: overheat, offline, pollution (per sensor), api-errors, crash,
+# down/up (stop/start the container), reset, status
 param(
     [Parameter(Mandatory = $true, Position = 0)]
     [ValidateSet("overheat", "offline", "pollution", "api-errors", "crash", "down", "up", "reset", "status")]

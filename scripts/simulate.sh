@@ -1,10 +1,6 @@
 #!/bin/sh
-# Break (and fix) things during a demo, from bash.
-#   scripts/simulate.sh overheat [sensor-1]
-#   scripts/simulate.sh offline  [sensor-2]
-#   scripts/simulate.sh pollution [sensor-3]
-#   scripts/simulate.sh api-errors | crash | reset | status
-#   scripts/simulate.sh down | up          stop / start the container
+# usage: simulate.sh overheat|offline|pollution [sensor]
+#        simulate.sh api-errors|crash|reset|status|down|up
 set -eu
 URL="${URL:-http://localhost:8000}"
 SCENARIO="${1:?usage: simulate.sh <scenario> [sensor]}"

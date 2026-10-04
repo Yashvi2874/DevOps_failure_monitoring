@@ -1,5 +1,4 @@
-# Jenkins Configuration as Code. Read on every startup, so the Jenkins setup
-# lives in Git like everything else. ${VARS} come from jenkins/.env.
+# ${VARS} come from jenkins/.env
 jenkins:
   systemMessage: "Sensor Dashboard CI/CD. This Jenkins is set up from jenkins/casc.yaml."
   numExecutors: 2
@@ -17,8 +16,6 @@ unclassified:
   location:
     url: "${JENKINS_URL:-http://localhost:8080/}"
 
-# The pipeline job, created with the Job DSL plugin. It reads the Jenkinsfile
-# from the repository and polls GitHub every minute for new commits.
 jobs:
   - script: |
       pipelineJob('sensor-dashboard-pipeline') {

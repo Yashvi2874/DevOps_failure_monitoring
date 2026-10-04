@@ -1,13 +1,9 @@
-"""Post-deployment smoke test.
-
-Runs inside a throwaway container on the sensor-net network:
+"""Post-deploy smoke test, run from a container on sensor-net:
 
     docker run --rm -i --network sensor-net -e EXPECTED_BUILD=42 \
         sensor-dashboard:42 python - < scripts/smoke_test.py
 
-Exits non-zero if the freshly deployed app is not healthy, which makes the
-Jenkins "Smoke Test" stage fail and triggers the rollback.
-Standard library only, so it runs in the app image without extra installs.
+A non-zero exit fails the Jenkins stage and triggers the rollback.
 """
 
 import json
@@ -29,7 +25,6 @@ def get(url):
 
 
 def wait_for(description, check):
-    """Retry `check` until it returns True or the timeout runs out."""
     deadline = time.time() + TIMEOUT
     last_problem = "not checked yet"
     while time.time() < deadline:

@@ -1,9 +1,6 @@
 #!/bin/sh
-# Send the pipeline's result to Alertmanager, so a failed build shows up in the
-# same place as a failed app.
-#   notify_alertmanager.sh firing     a build failed
-#   notify_alertmanager.sh resolved   a later build passed
-# Uses the variables Jenkins sets for every build (JOB_NAME, BUILD_NUMBER, ...).
+# Report the build result to Alertmanager: notify_alertmanager.sh firing|resolved
+# Reads JOB_NAME, BUILD_NUMBER and BUILD_URL from the Jenkins environment.
 set -eu
 
 STATE="${1:-firing}"
@@ -13,12 +10,12 @@ if [ "$STATE" = "firing" ]; then
     ENDS=$(date -u -d '+30 minutes' +%Y-%m-%dT%H:%M:%SZ)
     SUMMARY="Jenkins build #${BUILD_NUMBER:-?} failed"
 else
-    # Same labels as the failure alert, so Alertmanager marks that one resolved.
+    # same labels as the failure alert, so this resolves it
     ENDS="$NOW"
     SUMMARY="Pipeline is green again (build #${BUILD_NUMBER:-?} passed)"
 fi
 
-# Escape backslashes and quotes so a commit message can't break the JSON.
+# escape quotes so a commit message can't break the JSON
 SUBJECT=$(printf '%s' "${GIT_SUBJECT:-}" | sed 's/\\/\\\\/g; s/"/\\"/g')
 
 cat > alert.json <<EOF

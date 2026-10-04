@@ -1,9 +1,4 @@
-# Jenkins with everything this project needs baked in:
-#   - Docker CLI, Compose and Buildx, so pipeline steps can drive the host's
-#     Docker engine through the mounted /var/run/docker.sock
-#   - the plugins listed in plugins.txt
-#   - Configuration as Code (casc.yaml): admin user and the pipeline job are
-#     created on startup, so there is no setup wizard to click through
+# Jenkins + Docker CLI, the plugins in plugins.txt, and casc.yaml (no setup wizard)
 FROM jenkins/jenkins:2.580.1-lts-jdk21
 
 USER root

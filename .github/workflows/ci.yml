@@ -1,5 +1,3 @@
-# Continuous integration on GitHub. Jenkins does the deployment; this workflow
-# gives every push and pull request a quick pass/fail check on GitHub itself.
 name: CI
 
 on:

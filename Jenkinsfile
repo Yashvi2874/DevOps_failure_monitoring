@@ -1,10 +1,5 @@
-// CI/CD pipeline for the sensor dashboard.
-//
-//   Checkout -> Build & Test -> Validate Monitoring -> Build Image
-//            -> Deploy -> Smoke Test (rolls back automatically if it fails)
-//
-// Every step runs through Docker, so the Jenkins machine itself only needs the
-// Docker CLI. Jenkins talks to the host's Docker engine via the mounted socket.
+// Every step runs through Docker; Jenkins only needs the Docker CLI and the
+// host's Docker socket.
 
 pipeline {
     agent any
@@ -17,8 +12,7 @@ pipeline {
     }
 
     triggers {
-        // Check GitHub for new commits every minute. A webhook would be
-        // instant, but GitHub can't reach a Jenkins running on a laptop.
+        // GitHub can't reach a laptop for webhooks, so poll instead
         pollSCM('* * * * *')
     }
 
@@ -49,9 +43,8 @@ pipeline {
 
         stage('Build & Test') {
             steps {
-                // The "test" stage of app/Dockerfile has pytest and flake8 in it.
-                // Running it as a container (instead of during the build) lets
-                // us copy the JUnit report out even when tests fail.
+                // run the tests as a container, not during the build, so the
+                // JUnit report can be copied out even when they fail
                 sh '''
                     docker build --target test -t ${APP_IMAGE}:test-${IMAGE_TAG} app
                     docker run --name sensor-tests-${BUILD_NUMBER} ${APP_IMAGE}:test-${IMAGE_TAG}
@@ -72,8 +65,6 @@ pipeline {
 
         stage('Validate Monitoring') {
             steps {
-                // Broken alert rules are as bad as broken code: if they don't
-                // load, nobody gets told when the app fails.
                 sh '''
                     docker compose build prometheus alertmanager alert-receiver
                     docker run --rm --entrypoint promtool sensor-prometheus:latest \
@@ -106,8 +97,7 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                // IMAGE_TAG (the build number) tells docker-compose.yml which
-                // image to run. Only containers whose image changed are recreated.
+                // compose only recreates containers whose image changed
                 sh '''
                     export FORCE_UNHEALTHY=${SIMULATE_BAD_DEPLOY:-false}
                     docker compose up -d --no-build --remove-orphans
@@ -118,8 +108,6 @@ pipeline {
 
         stage('Smoke Test') {
             steps {
-                // Run the check from a throwaway container on the stack's network,
-                // the same way Prometheus and users reach the app.
                 sh '''
                     docker run --rm -i --network sensor-net -e EXPECTED_BUILD=${BUILD_NUMBER} \
                         ${APP_IMAGE}:${IMAGE_TAG} python - < scripts/smoke_test.py
@@ -127,9 +115,8 @@ pipeline {
             }
             post {
                 success {
-                    // Remember this build as the last known good one. :latest is
-                    // what a plain `docker compose up -d` starts, so it should be
-                    // the newest build that passed, not whatever was built locally.
+                    // stable is what rollback.sh restores; latest is what a plain
+                    // `docker compose up -d` starts
                     sh '''
                         docker tag ${APP_IMAGE}:${IMAGE_TAG} ${APP_IMAGE}:stable
                         docker tag ${APP_IMAGE}:${IMAGE_TAG} ${APP_IMAGE}:latest
@@ -148,11 +135,10 @@ pipeline {
             sh 'sh scripts/notify_alertmanager.sh resolved || true'
         }
         failure {
-            // Pipeline failures go through the same alerting path as app failures.
             sh 'sh scripts/notify_alertmanager.sh firing || true'
         }
         always {
-            // Keep the five newest numbered images and drop the rest.
+            // keep the five newest numbered images
             sh '''
                 docker images ${APP_IMAGE} --format '{{.Tag}}' | grep -E '^[0-9]+$' | sort -n | head -n -5 \
                     | xargs -r -I{} docker rmi ${APP_IMAGE}:{} >/dev/null 2>&1 || true

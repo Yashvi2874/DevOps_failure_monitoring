@@ -1,5 +1,3 @@
-"""Flask app: the dashboard page, a small JSON API and the /metrics endpoint."""
-
 import json
 import os
 import signal
@@ -26,13 +24,8 @@ def env_flag(name, default=False):
 
 
 def crash_process():
-    """Stop the whole container, not just this worker.
-
-    In the container gunicorn runs as PID 1 and this worker is its child.
-    Interrupting gunicorn makes the container exit, and Docker's restart
-    policy brings it back, which is what a real crash plus recovery looks
-    like. Outside a container we only exit our own process.
-    """
+    # gunicorn is PID 1 in the container; stopping it takes the container down
+    # so Docker's restart policy has to bring it back
     if os.getppid() == 1:
         os.kill(1, signal.SIGINT)
     os._exit(1)
@@ -78,23 +71,18 @@ def create_app(config=None):
         simulator=simulator, metrics=metrics, state=state, sampler=sampler, build=build
     )
 
-    # ---- request metrics -------------------------------------------------
-
     @app.before_request
     def start_timer():
         g.start_time = time.perf_counter()
 
     @app.after_request
     def record_request(response):
-        # Use the route pattern, not the raw path, so /static/<anything>
-        # doesn't create a new time series for every file.
+        # route pattern, not the raw path, to keep label cardinality low
         endpoint = request.url_rule.rule if request.url_rule else "unmatched"
         metrics.requests.labels(request.method, endpoint, str(response.status_code)).inc()
         if "start_time" in g:
             metrics.latency.labels(endpoint).observe(time.perf_counter() - g.start_time)
         return response
-
-    # ---- pages -------------------------------------------------------------
 
     @app.get("/")
     def index():
@@ -118,8 +106,6 @@ def create_app(config=None):
     @app.get("/metrics")
     def prometheus_metrics():
         return Response(generate_latest(metrics.registry), mimetype=CONTENT_TYPE_LATEST)
-
-    # ---- JSON API ----------------------------------------------------------
 
     @app.get("/api/readings")
     def readings():
@@ -149,7 +135,7 @@ def create_app(config=None):
         elif scenario == "api-errors":
             state.api_errors = active
         elif scenario == "crash":
-            # Answer first, then die, so the button gets a response.
+            # reply first so the button gets a response
             threading.Timer(0.5, app.config["CRASH_FUNCTION"]).start()
             return jsonify(ok=True, scenario="crash", message="crashing in 0.5s")
         elif scenario in SCENARIOS:
@@ -165,7 +151,6 @@ def create_app(config=None):
 
     @app.get("/api/alerts")
     def active_alerts():
-        """Show Alertmanager's active alerts on the dashboard itself."""
         base = app.config["ALERTMANAGER_URL"]
         if not base:
             return jsonify(available=False, alerts=[], reason="ALERTMANAGER_URL not set")

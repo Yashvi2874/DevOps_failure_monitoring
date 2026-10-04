@@ -1,7 +1,4 @@
-# Unit tests for the alert rules, run with:
-#   promtool test rules /etc/prometheus/tests/alert_rules_test.yml
-# Each test feeds Prometheus fake time series and checks which alerts are
-# firing at a given moment. The pipeline runs these before every deployment.
+# promtool test rules /etc/prometheus/tests/alert_rules_test.yml
 rule_files:
   - ../alert_rules.yml
 
