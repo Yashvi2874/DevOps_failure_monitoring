@@ -44,8 +44,8 @@
   <rect class="chip" x="610" y="132" width="120" height="30" rx="6"/><text class="chiptext" x="670" y="152" text-anchor="middle">4. Build Image</text>
   <rect class="chip" x="740" y="132" width="130" height="30" rx="6"/><text class="chiptext" x="805" y="152" text-anchor="middle">5. Deploy</text>
   <rect class="chip" x="880" y="132" width="160" height="30" rx="6"/><text class="chiptext" x="960" y="152" text-anchor="middle">6. Smoke Test</text>
-  <rect class="chip-red" x="880" y="172" width="270" height="30" rx="6"/><text class="chiptext" x="1015" y="192" text-anchor="middle" fill="#7f1d1d">smoke test fails → roll back to :stable</text>
-  <text class="sub" x="610" y="192">tests fail → stop, nothing deployed</text>
+  <rect class="chip-red" x="880" y="172" width="270" height="30" rx="6"/><text class="chiptext" x="1015" y="192" text-anchor="middle" fill="#7f1d1d">smoke test fails: roll back to :stable</text>
+  <text class="sub" x="610" y="192">tests fail: stop, nothing deployed</text>
 
   <path class="line" d="M190 90 L266 90" marker-end="url(#arrow)"/>
   <text class="lbl" x="228" y="80" text-anchor="middle">git push</text>
@@ -57,7 +57,7 @@
 
   <!-- Docker host -->
   <rect x="30" y="285" width="1140" height="410" rx="14" fill="#eef6ff" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="8 5"/>
-  <text class="title" x="50" y="313" fill="#1e3a8a">Docker host · Compose project "sensor-monitoring" · network sensor-net</text>
+  <text class="title" x="50" y="313" fill="#1e3a8a">Docker host, Compose project "sensor-monitoring", network sensor-net</text>
 
   <path class="line" d="M760 225 L760 281" marker-end="url(#arrow)"/>
   <text class="lbl" x="770" y="258">docker compose up -d (IMAGE_TAG = build number)</text>
@@ -79,8 +79,8 @@
   <rect class="box" x="850" y="380" width="290" height="130" rx="10"/>
   <text class="title" x="870" y="410">Alertmanager  :9093</text>
   <text class="sub" x="870" y="433">groups alerts per job and sensor</text>
-  <text class="sub" x="870" y="453">routes: critical → on-call-pager</text>
-  <text class="sub" x="870" y="473">           others → team-chat</text>
+  <text class="sub" x="870" y="453">routes: critical to on-call-pager</text>
+  <text class="sub" x="870" y="473">           others to team-chat</text>
   <text class="sub" x="870" y="493">inhibits noise when the app is down</text>
 
   <rect class="box" x="850" y="580" width="290" height="90" rx="10"/>
@@ -101,10 +101,10 @@
   <text class="lbl" x="600" y="343" text-anchor="middle" fill="#0f766e">dashboard reads active alerts from the Alertmanager API and shows them as a banner</text>
 
   <path class="red" d="M1120 225 L1120 376" marker-end="url(#arrow-red)"/>
-  <text class="lbl" x="1110" y="302" text-anchor="end" fill="#b91c1c">pipeline failure → PipelineFailed alert</text>
+  <text class="lbl" x="1110" y="302" text-anchor="end" fill="#b91c1c">pipeline failure raises PipelineFailed alert</text>
 
   <text class="sub" x="60" y="560">Failure simulation (dashboard buttons or scripts/simulate.ps1):</text>
-  <text class="sub" x="60" y="582">overheat · sensor offline · pollution spike · API errors · crash · docker stop</text>
+  <text class="sub" x="60" y="582">overheat, sensor offline, pollution spike, API errors, crash, docker stop</text>
   <text class="sub" x="60" y="614">Volumes: prometheus-data, alertmanager-data (survive redeploys)</text>
   <text class="sub" x="60" y="636">Images built per commit: sensor-dashboard:&lt;build&gt;, last good one tagged :stable</text>
 </svg>

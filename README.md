@@ -96,7 +96,7 @@ Jenkins talks to the host's Docker engine through the mounted
 
 | Stage | What happens | If it fails |
 |---|---|---|
-| Checkout | Pulls the commit, records the short hash and message | — |
+| Checkout | Pulls the commit, records the short hash and message | Not applicable |
 | Build & Test | Builds the `test` stage of `app/Dockerfile` and runs flake8 + pytest in a container; the JUnit report is published to Jenkins | Pipeline stops. Nothing is deployed. |
 | Validate Monitoring | `promtool check config`, `promtool test rules`, `amtool check-config`, routing checks, receiver tests | Pipeline stops |
 | Build Image | Builds `sensor-dashboard:<build number>` with the commit hash baked in | Pipeline stops |
@@ -140,7 +140,7 @@ available from the command line:
 
 | Do this | You should see (timings measured on our setup) |
 |---|---|
-| Overheat Sensor 1 | `SensorOverheat` in the receiver after ~30–40 s |
+| Overheat Sensor 1 | `SensorOverheat` in the receiver after 30 to 40 s |
 | Take Sensor 2 offline | `SensorOffline` after ~30 s |
 | Pollution spike on Sensor 3 | `HighCO2Level` + `HighPM25Level` in one notification after ~45 s |
 | Break the API (with the dashboard open, so there is traffic) | `HighApiErrorRate` on the on-call channel after ~50 s |
@@ -199,4 +199,4 @@ More in [`docs/screenshots`](docs/screenshots) and in the [project report](docs/
 |---|---|
 | Yashasvi Gupta | 16010123341 |
 | Shubhpreet Kaur | 16010123328 |
-| Aditi Agrawal | 16010123018 |
+| Aditi Agrawal | 16010123318 |
