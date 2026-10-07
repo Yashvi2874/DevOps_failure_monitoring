@@ -149,16 +149,52 @@ available from the command line:
 | Push a commit with a failing test | Jenkins stops at Build & Test, the running version is untouched, `PipelineFailed` fires |
 | **Reset everything** | Each alert shows up again as RESOLVED |
 
-## Screenshots
+## Screenshots and verification
 
-| | |
+### 1. Environmental sensor dashboard
+
+| Normal operation (healthy) | Incident state (alerts active) |
 |---|---|
-| ![Dashboard during an incident](docs/screenshots/dashboard-with-alerts.png) | ![Jenkins stage view](docs/screenshots/jenkins-job-stage-view.png) |
-| Dashboard while three sensors are misbehaving | Jenkins builds: green deploys, a blocked bad test (#5) and a rolled-back release (#3) |
-| ![Alert receiver](docs/screenshots/alert-receiver.png) | ![Prometheus alerts](docs/screenshots/prometheus-alerts.png) |
-| Notifications on both channels, firing and resolved | Alert rules firing in Prometheus |
+| ![Dashboard healthy](docs/screenshots/dashboard-healthy.png) | ![Dashboard during incident](docs/screenshots/dashboard-with-alerts.png) |
+| Three simulated sensors operating within normal baseline ranges | Active alert banner, elevated values, and incident badges |
 
-More in [`docs/screenshots`](docs/screenshots) and in the [project report](docs/REPORT.md).
+### 2. Jenkins CI/CD pipeline & automated recovery
+
+| Pipeline stage view | Post-deployment smoke test |
+|---|---|
+| ![Jenkins stage view](docs/screenshots/jenkins-job-stage-view.png) | ![Smoke test passing](docs/screenshots/jenkins-smoke-test-console.png) |
+| Successful builds, blocked test failure (#5), and auto-rollback (#3) | Containerized health, API, metric, and target verification |
+
+| Automated rollback on failing release | Blocked deployment on failing test |
+|---|---|
+| ![Rollback console](docs/screenshots/jenkins-rollback-console.png) | ![Blocked test console](docs/screenshots/jenkins-blocked-deploy-console.png) |
+| Smoke test detects HTTP 503 and automatically restores `:stable` | Failing unit test halts pipeline before deployment |
+
+### 3. Prometheus & Alertmanager monitoring
+
+| Prometheus scrape targets | Sensor temperature telemetry |
+|---|---|
+| ![Prometheus targets](docs/screenshots/prometheus-targets.png) | ![Temperature graph](docs/screenshots/prometheus-temperature-graph.png) |
+| Scrape health of dashboard, Prometheus, and Alertmanager (5s interval) | Temperature trend climbing during overheat simulation |
+
+| Prometheus alert rules | Alertmanager UI & routing |
+|---|---|
+| ![Prometheus alerts](docs/screenshots/prometheus-alerts.png) | ![Alertmanager UI](docs/screenshots/alertmanager-ui.png) |
+| 7 alert rules evaluated with `for:` duration noise suppression | Grouping by sensor and job, deduplication, and inhibition |
+
+| Webhook alert receiver |
+|---|
+| ![Alert receiver](docs/screenshots/alert-receiver.png) |
+| Incoming notifications delivered to `on-call-pager` and `team-chat`, including firing and resolved events |
+
+### 4. Git workflow & GitHub Actions
+
+| Git feature branches | GitHub Actions CI workflow |
+|---|---|
+| ![GitHub commits](docs/screenshots/github-commits.png) | ![GitHub Actions](docs/screenshots/github-actions.png) |
+| Feature-branch development merged cleanly into `main` | Independent linting, testing, and full-stack smoke test on push |
+
+More visual evidence and test output is available in the [project report](docs/REPORT.md).
 
 ## Choices worth explaining
 
