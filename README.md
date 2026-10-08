@@ -194,7 +194,7 @@ available from the command line:
 | ![GitHub commits](docs/screenshots/github-commits.png) | ![GitHub Actions](docs/screenshots/github-actions.png) |
 | Feature-branch development merged cleanly into `main` | Independent linting, testing, and full-stack smoke test on push |
 
-More visual evidence and test output is available in the [project report](docs/REPORT.md).
+More visual evidence and test output is available in the [project report](docs/DevOps_Mini_Project_Report.pdf).
 
 ## Choices worth explaining
 
